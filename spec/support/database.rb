@@ -7,6 +7,7 @@ ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
     t.integer :status
     t.integer :role
+    t.integer :priority
     t.text :recipients
   end
 end

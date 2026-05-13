@@ -16,10 +16,11 @@ module SorbetModelEnum
         raise ArgumentError, "#{enum_class} must be a T::Enum subclass" unless enum_class < T::Enum
 
         array = options.delete(:array)
+        optional = options.delete(:optional)
 
         if array
           self._sorbet_enum_definitions = _sorbet_enum_definitions.merge(
-            attr_name => { enum_class: enum_class, array: true },
+            attr_name => { enum_class: enum_class, array: true, optional: optional },
           )
 
           _define_sorbet_array_enum_getter(attr_name, enum_class)
@@ -28,7 +29,7 @@ module SorbetModelEnum
           mapping = _build_enum_mapping(enum_class)
 
           self._sorbet_enum_definitions = _sorbet_enum_definitions.merge(
-            attr_name => { enum_class: enum_class, mapping: mapping },
+            attr_name => { enum_class: enum_class, mapping: mapping, optional: optional },
           )
 
           enum(attr_name, mapping, **options)

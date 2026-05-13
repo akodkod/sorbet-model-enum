@@ -34,23 +34,23 @@ module Tapioca
               enum_class = config[:enum_class]
               enum_type = T.must(enum_class.name)
 
+              optional = config[:optional] == true
+
               if config[:array]
-                create_array_getter(klass, attr_name.to_s, enum_type)
+                create_array_getter(klass, attr_name.to_s, enum_type, optional)
                 create_array_setter(klass, attr_name.to_s, enum_type)
               else
-                create_getter(klass, attr_name.to_s, enum_type)
+                create_getter(klass, attr_name.to_s, enum_type, optional)
                 create_setter(klass, attr_name.to_s, enum_type)
               end
             end
           end
         end
 
-        sig { params(klass: RBI::Scope, name: String, enum_type: String).void }
-        private def create_getter(klass, name, enum_type)
-          klass.create_method(
-            name,
-            return_type: "T.nilable(::#{enum_type})",
-          )
+        sig { params(klass: RBI::Scope, name: String, enum_type: String, optional: T::Boolean).void }
+        private def create_getter(klass, name, enum_type, optional)
+          return_type = optional ? "T.nilable(::#{enum_type})" : "::#{enum_type}"
+          klass.create_method(name, return_type: return_type)
         end
 
         sig { params(klass: RBI::Scope, name: String, enum_type: String).void }
@@ -64,12 +64,10 @@ module Tapioca
           )
         end
 
-        sig { params(klass: RBI::Scope, name: String, enum_type: String).void }
-        private def create_array_getter(klass, name, enum_type)
-          klass.create_method(
-            name,
-            return_type: "T.nilable(T::Array[::#{enum_type}])",
-          )
+        sig { params(klass: RBI::Scope, name: String, enum_type: String, optional: T::Boolean).void }
+        private def create_array_getter(klass, name, enum_type, optional)
+          return_type = optional ? "T.nilable(T::Array[::#{enum_type}])" : "T::Array[::#{enum_type}]"
+          klass.create_method(name, return_type: return_type)
         end
 
         sig { params(klass: RBI::Scope, name: String, enum_type: String).void }

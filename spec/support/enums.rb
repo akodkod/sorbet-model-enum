@@ -16,6 +16,13 @@ class UserRole < T::Enum
   end
 end
 
+class UserPriority < T::Enum
+  enums do
+    Low = new(0)
+    High = new(1)
+  end
+end
+
 class UserRecipients < T::Enum
   enums do
     CompanyAdmins = new("company-admins")

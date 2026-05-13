@@ -34,15 +34,24 @@ RSpec.describe Tapioca::Dsl::Compilers::SorbetEnum do
 
       expect(output).to include("def status; end")
       expect(output).to include("def role; end")
+      expect(output).to include("def priority; end")
       expect(output).to include("def status=(value); end")
       expect(output).to include("def role=(value); end")
+      expect(output).to include("def priority=(value); end")
     end
 
-    it "generates nilable return type for getter" do
+    it "generates non-nilable return type for getter by default" do
       output = rbi_for(User)
 
-      expect(output).to include("returns(T.nilable(::UserStatus))")
-      expect(output).to include("returns(T.nilable(::UserRole))")
+      expect(output).to include("returns(::UserStatus)")
+      expect(output).to include("returns(::UserRole)")
+      expect(output).not_to include("returns(T.nilable(::UserRole))")
+    end
+
+    it "generates nilable return type for getter when optional: true" do
+      output = rbi_for(User)
+
+      expect(output).to include("returns(T.nilable(::UserPriority))")
     end
 
     it "generates union type for setter parameter" do
@@ -60,13 +69,14 @@ RSpec.describe Tapioca::Dsl::Compilers::SorbetEnum do
       output = rbi_for(User)
 
       setter_lines = output.lines.select { |line| line.include?(".void") }
-      expect(setter_lines.length).to eq(3)
+      expect(setter_lines.length).to eq(4)
     end
 
-    it "generates array return type for array enum getter" do
+    it "generates non-nilable array return type for array enum getter by default" do
       output = rbi_for(User)
 
-      expect(output).to include("returns(T.nilable(T::Array[::UserRecipients]))")
+      expect(output).to include("returns(T::Array[::UserRecipients])")
+      expect(output).not_to include("returns(T.nilable(T::Array[::UserRecipients]))")
     end
 
     it "generates array parameter type for array enum setter" do
