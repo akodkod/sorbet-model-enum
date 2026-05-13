@@ -60,7 +60,21 @@ RSpec.describe Tapioca::Dsl::Compilers::SorbetEnum do
       output = rbi_for(User)
 
       setter_lines = output.lines.select { |line| line.include?(".void") }
-      expect(setter_lines.length).to eq(2)
+      expect(setter_lines.length).to eq(3)
+    end
+
+    it "generates array return type for array enum getter" do
+      output = rbi_for(User)
+
+      expect(output).to include("returns(T.nilable(T::Array[::UserRecipients]))")
+    end
+
+    it "generates array parameter type for array enum setter" do
+      output = rbi_for(User)
+
+      expect(output).to include(
+        "params(value: T.nilable(T::Array[T.any(::UserRecipients, String, Symbol, Integer)]))",
+      )
     end
   end
 end

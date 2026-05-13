@@ -25,7 +25,7 @@ module Tapioca
         end
 
         sig { override.void }
-        def decorate
+        def decorate # rubocop:disable Metrics/AbcSize
           definitions = constant._sorbet_enum_definitions
           return if definitions.empty?
 
@@ -34,8 +34,13 @@ module Tapioca
               enum_class = config[:enum_class]
               enum_type = T.must(enum_class.name)
 
-              create_getter(klass, attr_name.to_s, enum_type)
-              create_setter(klass, attr_name.to_s, enum_type)
+              if config[:array]
+                create_array_getter(klass, attr_name.to_s, enum_type)
+                create_array_setter(klass, attr_name.to_s, enum_type)
+              else
+                create_getter(klass, attr_name.to_s, enum_type)
+                create_setter(klass, attr_name.to_s, enum_type)
+              end
             end
           end
         end
@@ -54,6 +59,25 @@ module Tapioca
             "#{name}=",
             parameters: [
               create_param("value", type: "T.nilable(T.any(::#{enum_type}, String, Symbol, Integer))"),
+            ],
+            return_type: "void",
+          )
+        end
+
+        sig { params(klass: RBI::Scope, name: String, enum_type: String).void }
+        private def create_array_getter(klass, name, enum_type)
+          klass.create_method(
+            name,
+            return_type: "T.nilable(T::Array[::#{enum_type}])",
+          )
+        end
+
+        sig { params(klass: RBI::Scope, name: String, enum_type: String).void }
+        private def create_array_setter(klass, name, enum_type)
+          klass.create_method(
+            "#{name}=",
+            parameters: [
+              create_param("value", type: "T.nilable(T::Array[T.any(::#{enum_type}, String, Symbol, Integer)])"),
             ],
             return_type: "void",
           )

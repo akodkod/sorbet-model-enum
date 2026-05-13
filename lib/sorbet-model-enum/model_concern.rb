@@ -15,16 +15,27 @@ module SorbetModelEnum
 
         raise ArgumentError, "#{enum_class} must be a T::Enum subclass" unless enum_class < T::Enum
 
-        mapping = _build_enum_mapping(enum_class)
+        array = options.delete(:array)
 
-        self._sorbet_enum_definitions = _sorbet_enum_definitions.merge(
-          attr_name => { enum_class: enum_class, mapping: mapping },
-        )
+        if array
+          self._sorbet_enum_definitions = _sorbet_enum_definitions.merge(
+            attr_name => { enum_class: enum_class, array: true },
+          )
 
-        enum(attr_name, mapping, **options)
+          _define_sorbet_array_enum_getter(attr_name, enum_class)
+          _define_sorbet_array_enum_setter(attr_name, enum_class)
+        else
+          mapping = _build_enum_mapping(enum_class)
 
-        _define_sorbet_enum_getter(attr_name, enum_class)
-        _define_sorbet_enum_setter(attr_name)
+          self._sorbet_enum_definitions = _sorbet_enum_definitions.merge(
+            attr_name => { enum_class: enum_class, mapping: mapping },
+          )
+
+          enum(attr_name, mapping, **options)
+
+          _define_sorbet_enum_getter(attr_name, enum_class)
+          _define_sorbet_enum_setter(attr_name)
+        end
       end
 
       private def _build_enum_mapping(enum_class)
@@ -58,6 +69,26 @@ module SorbetModelEnum
             super(string_key)
           else
             super(value)
+          end
+        end
+      end
+
+      private def _define_sorbet_array_enum_getter(attr_name, enum_class)
+        define_method(attr_name) do
+          raw = read_attribute(attr_name)
+          return nil if raw.nil?
+
+          raw.map { |v| enum_class.deserialize(v) }
+        end
+      end
+
+      private def _define_sorbet_array_enum_setter(attr_name, _enum_class)
+        define_method(:"#{attr_name}=") do |values|
+          if values.nil?
+            write_attribute(attr_name, nil)
+          else
+            serialized = values.map { |v| v.is_a?(T::Enum) ? v.serialize : v }
+            write_attribute(attr_name, serialized)
           end
         end
       end

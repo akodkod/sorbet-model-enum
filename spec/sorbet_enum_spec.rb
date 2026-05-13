@@ -166,6 +166,78 @@ RSpec.describe SorbetModelEnum::ModelConcern do
     end
   end
 
+  describe "array enum" do
+    describe "getter" do
+      it "returns an array of T::Enum instances" do
+        user = User.create!(recipients: [UserRecipients::CompanyAdmins, UserRecipients::OfficeMembers])
+
+        expect(user.recipients).to eq([UserRecipients::CompanyAdmins, UserRecipients::OfficeMembers])
+      end
+
+      it "returns nil for nil column" do
+        user = User.create!
+
+        expect(user.recipients).to be_nil
+      end
+
+      it "returns an empty array for an empty array" do
+        user = User.create!(recipients: [])
+
+        expect(user.recipients).to eq([])
+      end
+
+      it "works after reload" do
+        user = User.create!(recipients: [UserRecipients::CompanyAdmins])
+        user.reload
+
+        expect(user.recipients).to eq([UserRecipients::CompanyAdmins])
+      end
+
+      it "works after find" do
+        user = User.create!(recipients: [UserRecipients::CompanyMembers, UserRecipients::OfficeAdmins])
+        loaded = User.find(user.id)
+
+        expect(loaded.recipients).to eq([UserRecipients::CompanyMembers, UserRecipients::OfficeAdmins])
+      end
+    end
+
+    describe "setter" do
+      it "accepts an array of T::Enum instances" do
+        user = User.new
+        user.recipients = [UserRecipients::CompanyAdmins, UserRecipients::OfficeMembers]
+        user.save!
+
+        loaded = User.find(user.id)
+        expect(loaded.recipients).to eq([UserRecipients::CompanyAdmins, UserRecipients::OfficeMembers])
+      end
+
+      it "accepts nil" do
+        user = User.create!(recipients: [UserRecipients::CompanyAdmins])
+        user.recipients = nil
+        user.save!
+
+        loaded = User.find(user.id)
+        expect(loaded.recipients).to be_nil
+      end
+
+      it "persists value after save and reload" do
+        user = User.create!
+        user.recipients = [UserRecipients::OfficeAdmins, UserRecipients::OfficeMembers]
+        user.save!
+        user.reload
+
+        expect(user.recipients).to eq([UserRecipients::OfficeAdmins, UserRecipients::OfficeMembers])
+      end
+    end
+
+    it "does not provide predicate or bang methods" do
+      user = User.new
+
+      expect(user).not_to respond_to(:company_admins?)
+      expect(user).not_to respond_to(:company_admins!)
+    end
+  end
+
   describe "validation" do
     it "raises ArgumentError if enum_class is not a T::Enum subclass" do
       expect do

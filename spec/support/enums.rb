@@ -15,3 +15,12 @@ class UserRole < T::Enum
     Guest = new(2)
   end
 end
+
+class UserRecipients < T::Enum
+  enums do
+    CompanyAdmins = new("company-admins")
+    CompanyMembers = new("company-members")
+    OfficeAdmins = new("office-admins")
+    OfficeMembers = new("office-members")
+  end
+end
