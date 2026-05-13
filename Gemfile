@@ -20,7 +20,4 @@ gem "simplecov"
 gem "sqlite3"
 
 gem "sorbet-static-and-runtime"
-gem "tapioca", "~> 0.17.10"
-
-# Fix OpenSSL 3.x CRL verification issues
-gem "openssl", "3.3.2"
+gem "tapioca"
